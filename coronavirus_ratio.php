@@ -13,7 +13,7 @@
 		<div class = "corps">
 			<div class = "Centre_Doc">
 				<canvas id="myChart" width="400" height="280"></canvas>
-				<form action="coronavirus.php" method="post">
+				<form action="coronavirus_ratio.php" method="post">
                     <?php
                         $date = date("d.m.Y");
                         $path = 'state_' . $date . '.csv';
@@ -72,16 +72,24 @@
                                 }
                                 for ($i = 0;$i < sizeof($line);$i++)
                                 {
-                                    if ($entete[$i] == 'date' | $entete[$i] == 'maille_nom' | $entete[$i] == 'cas_confirmes' | $entete[$i] == $analyse)
+                                    if ($entete[$i] == 'date' | $entete[$i] == 'maille_nom' | $entete[$i] == 'cas_confirmes' | strpos($entete[$i], $analyse))
                                     {
-                                        if ($entete[$i] == $analyse)
+                                        if ($entete[$i] == 'ratio_' . $analyse)
                                         {
                                             echo '<td class = "cum">'.$line[$i].'</td>';
+                                        }
+                                        else if ($entete[$i] == 'ratio_' . $analyse . '_ic_inf')
+                                        {
+                                            echo '<td class = "born_inf">'.$line[$i].'</td>';
                                         }
                                         else if ($entete[$i] == 'date')
                                         {
                                             echo '<td class = "date">'.$line[$i].'</td>';
                                         }
+                                        else if (strpos($entete[$i], 'ic_sup'))
+                                        {
+                                            echo '<td class = "born_sup">'.$line[$i].'</td>';
+                                        } 
                                         else
                                         {
                                             echo '<td>'.$line[$i].'</td>';
@@ -103,6 +111,6 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
-		<script type="text/javascript" src="coronavirus.js"></script>
+		<script type="text/javascript" src="coronavirus_ratio.js"></script>
 	</body>
 </html>
