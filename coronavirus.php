@@ -11,6 +11,11 @@
 	</head>
 	<body>
 		<div class = "corps">
+            <div class = "Gauche_Doc">
+				<ul>
+					<a href = "Index.php"> Acceuil </a> <br />
+				</ul>
+			</div>
 			<div class = "Centre_Doc">
 				<canvas id="myChart" width="400" height="280"></canvas>
 				<form action="coronavirus.php" method="post">
