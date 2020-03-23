@@ -44,6 +44,7 @@
                                     <OPTION>hospitalises</OPTION>
                                     <OPTION>reanimation</OPTION>
                                     <OPTION>deces</OPTION>
+                                    <OPTION>cas_confirmes</OPTION>
                                 </Select>
                                 <input type="submit" value="Valider" />
                                 </div>';

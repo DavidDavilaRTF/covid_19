@@ -3,7 +3,7 @@ import pandas
 import datetime
 import numpy
 
-date = datetime.datetime.utcnow()
+date = datetime.datetime.now()
 date = date.strftime('%d.%m.%Y')
 r = requests.get('https://www.data.gouv.fr/en/datasets/r/0b66ca39-1623-4d9c-83ad-5434b7f9e2a4')
 fichier = open('C:\\covid-fr\\datas\\' + 'covid_' + date + '.csv','wb')
