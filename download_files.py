@@ -5,7 +5,7 @@ import numpy
 
 date = datetime.datetime.now()
 date = date.strftime('%d.%m.%Y')
-r = requests.get('https://www.data.gouv.fr/en/datasets/r/0b66ca39-1623-4d9c-83ad-5434b7f9e2a4')
+r = requests.get('https://raw.githubusercontent.com/opencovid19-fr/data/master/dist/chiffres-cles.csv')
 fichier = open('C:\\covid-fr\\datas\\' + 'covid_' + date + '.csv','wb')
 fichier.write(r.content)
 fichier.close()
