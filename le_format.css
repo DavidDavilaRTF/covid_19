@@ -1,0 +1,160 @@
+.bienvenue
+{
+	color: blue;
+}
+span
+{
+	color: red;
+	background-color: yellow;
+}
+p
+{
+	font-size: 16px;
+	font-family: "Time New Roman";
+	/* font-style: italic; */
+	/* font-weight: bold; */
+	/* text-decoration: underline; */
+	text-align: left;
+}
+body
+{
+	/* background-color: grey; */
+	/* background-image: url("int.jpg"); */
+	/* background-attachment: fixed; */
+	/* background-repeat: no-repeat; */
+	/* color: white; */
+}
+.titre1
+{
+	font-size: 32px;
+	font-family: "Time New Roman";
+	font-weight: bold;
+	text-decoration: underline;
+	text-align: left;
+}
+
+.logo_aps
+{
+	text-align: center;
+}
+.entete
+{
+	/* border: 3px solid; */
+}
+.corps
+{
+	display: flex;
+}
+.Gauche
+{
+	border: 3px solid;
+	background-color: grey;
+	width: 10%;
+	height: 10%;
+}
+.Centre
+{
+	width: 65%;
+	text-align: center;
+}
+.Droite
+{
+	width: 25%;
+}
+
+.championnat
+{
+	text-align: center;
+}
+
+.Centre_Doc
+{
+	width: 65%;
+	text-align: left;
+	margin-left: 15%;
+	/* margin-right: 15%; */
+	margin-top: 5%;
+}
+
+.Gauche_Doc
+{
+	border: 3px solid;
+	background-color: grey;
+	margin-top: 5%;
+	width: 10%;
+	height: 10%;
+}
+.titre_analyse
+{
+	text-decoration: underline;
+	color: black;
+}
+
+.Droite_Doc
+{
+	margin-top: 5%;
+	width: 25%;
+}
+
+.bas_de_page
+{
+	background-color: #002F47;
+	color: white;
+	text-align: center;
+}
+body
+{
+	background-color: #DFF2FF
+}
+a {
+  /* -webkit-border-radius: 10; */
+  /* -moz-border-radius: 10; */
+  /* border-radius: 10px; */
+  /* font-family: Arial; */
+  /* color: #ffffff; */
+  /* font-size: 20px; */
+  /* background: #105685; */
+  padding: 8px 9px 8px 9px;
+  text-decoration: none;
+  /* background: #3cb0fd; */
+  /* background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db); */
+  /* background-image: -moz-linear-gradient(top, #3cb0fd, #3498db); */
+  /* background-image: -ms-linear-gradient(top, #3cb0fd, #3498db); */
+  /* background-image: -o-linear-gradient(top, #3cb0fd, #3498db); */
+  /* background-image: linear-gradient(to bottom, #3cb0fd, #3498db); */
+  /* text-decoration: none; */
+}
+
+td 
+{
+	border: 1px solid black;
+	text-align: center;
+}
+
+tr
+{
+	border-collapse:collapse;
+}
+
+table
+{
+	border-collapse:collapse;
+	background-color: white;
+	margin-left:auto;
+    margin-right:auto;
+}
+
+.Rouge
+{
+	background-color: red;
+}
+
+.Vert
+{
+	background-color: green;
+}
+
+.Jaune
+{
+	background-color: yellow;
+}

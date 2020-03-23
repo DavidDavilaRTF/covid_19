@@ -6,9 +6,6 @@
 
 		<meta charset = "utf-8">
 		<link rel = "stylesheet" href = "le_format.css" />
-		<title> 
-			AlgoPronos
-		</title>
 	</head>
 	
 	<body>
