@@ -14,33 +14,35 @@
 				</ul>
 			</div>
 			<div class = "Centre_Doc">
-                <canvas id="myChart" width="400" height="280"></canvas>
 				<form action="restez_chez_vous.php" method="post">
 					<div align = "center">
 						<input type = "text" size = 9 placeholder = "Pr mutation" name = "pr_mutation" />
 						<input type="submit" value="Valider" />
+						<br>
 					</div>
                     <?php
                         if(isset($_POST['pr_mutation']))
                         {
                             $pr = floatval($_POST['pr_mutation']);
 							$pr_mut = 1 - pow(1 - $pr,10);
-							echo '<p class = "proba" pow = 10 value = ' . $pr_mut . '></p>';
+							echo '<p class = "proba" pow = "10 ind" value = ' . $pr_mut . '></p>';
 							$pr_mut = 1 - pow(1 - $pr,100);
-							echo '<p class = "proba" pow = 100 value = ' . $pr_mut . '></p>';
+							echo '<p class = "proba" pow = "100 ind" value = ' . $pr_mut . '></p>';
 							$pr_mut = 1 - pow(1 - $pr,1000);
-							echo '<p class = "proba" pow = 1000 value = ' . $pr_mut . '></p>';
+							echo '<p class = "proba" pow = "1 000 ind" value = ' . $pr_mut . '></p>';
 							$pr_mut = 1 - pow(1 - $pr,10000);
-							echo '<p class = "proba" pow = 10000 value = ' . $pr_mut . '></p>';
+							echo '<p class = "proba" pow = "10 000 ind" value = ' . $pr_mut . '></p>';
 							$pr_mut = 1 - pow(1 - $pr,100000);
-							echo '<p class = "proba" pow = 100000 value = ' . $pr_mut . '></p>';
+							echo '<p class = "proba" pow = "100 000 ind" value = ' . $pr_mut . '></p>';
 							$pr_mut = 1 - pow(1 - $pr,1000000);
-							echo '<p class = "proba" pow = 1000000 value = ' . $pr_mut . '></p>';
+							echo '<p class = "proba" pow = "1 000 000 ind" value = ' . $pr_mut . '></p>';
 							$pr_mut = 1 - pow(1 - $pr,10000000);
-							echo '<p class = "proba" pow = 10000000 value = ' . $pr_mut . '></p>';                           
-                        }
+							echo '<p class = "proba" pow = "10 000 000 ind" value = ' . $pr_mut . '></p>';     
+							echo 'Si le virus a ' . $pr * 100 . '% de chance de muter chez un individu, voici quel serait la probabilité que celui-ci mute pour au moins un individu, pour X individus contamines. <br> En restant chez vous le virus aura moins de chance de muter';                      
+						}
 					?>
 				</form>
+				<canvas id="myChart" width="400" height="280"></canvas>
 			</div>
 		</div>		
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
