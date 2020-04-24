@@ -48,7 +48,11 @@ class prediction_covid:
         self.covid = pandas.read_csv('C:\\covid-fr\\datas\\legend.csv',sep = ';',engine = 'python')
         self.covid_train = pandas.DataFrame()
         self.covid_test = pandas.DataFrame()
-        self.mes = 0
+        self.mes = pandas.DataFrame()
+        self.mes['lm'] = [0]
+        self.mes['tree'] = [0]
+        self.mes['rf'] = [0]
+        self.mes['knn'] = [0]
         self.cv = cv
 
     def create_train_test(self):
@@ -65,15 +69,29 @@ class prediction_covid:
             y_test = self.covid_test[[self.covid_test.columns[len(self.covid_test.columns) - 1]]]
             x_train = self.covid_train.drop([self.covid_train.columns[len(self.covid_train.columns) - 1]],axis = 1)
             x_test = self.covid_test.drop([self.covid_test.columns[len(self.covid_test.columns) - 1]],axis = 1)
+            y_test = numpy.array(y_test)[:,0]
 
             model = linear_model.LinearRegression()
-            # model = tree.DecisionTreeClassifier()
-            # model = ensemble.RandomForestClassifier()
-            # model = neighbors.KNeighborsClassifier()
             model.fit(x_train,y_train)
             pred = model.predict(x_test)[:,0]
-            y_test = numpy.array(y_test)[:,0]
-            self.mes += numpy.mean(abs(y_test - pred)) / self.cv
+            self.mes['lm'].iloc[0] += numpy.mean(numpy.power(y_test - pred,2.0)) / self.cv
+
+            model = tree.DecisionTreeClassifier()
+            model.fit(x_train,y_train)
+            pred = model.predict(x_test)
+            self.mes['tree'].iloc[0] += numpy.mean(numpy.power(y_test - pred,2.0)) / self.cv
+
+            model = ensemble.RandomForestClassifier()
+            model.fit(x_train,y_train)
+            pred = model.predict(x_test)
+            self.mes['rf'].iloc[0] += numpy.mean(numpy.power(y_test - pred,2.0)) / self.cv
+
+            model = neighbors.KNeighborsClassifier()
+            model.fit(x_train,y_train)
+            pred = model.predict(x_test)
+            self.mes['knn'].iloc[0] += numpy.mean(numpy.power(y_test - pred,2.0)) / self.cv
+
+            print(i)
             print(self.mes)
 
     def analyze(self):
@@ -104,5 +122,6 @@ for url_csv in csv:
 an = analysis(path_folder,csv[0],col_id[0],col_drop[0],11)
 an.diff_date()
 
-pc = prediction_covid(10)
+pc = prediction_covid(100)
+pc.mesure()
 pc.analyze()
