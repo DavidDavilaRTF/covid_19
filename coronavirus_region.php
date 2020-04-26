@@ -81,6 +81,7 @@
                         $nb_line = 0;
                         $region = 'monde';
                         $analyse = 'hosp';
+                        $sex = '0';
                         if (isset($_POST['region']) & isset($_POST['analyse']) & isset($_POST['sexe']))
                         {
                             $region = $_POST['region'];

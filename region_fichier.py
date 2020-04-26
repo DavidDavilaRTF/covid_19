@@ -13,6 +13,21 @@ fichier.close()
 region = pandas.read_csv('C:\\covid-fr\\datas\\' + 'region_covid_' + date + '.csv', sep = ';', engine = 'python')
 region['jour'] = region['jour'].apply(lambda x: datetime.datetime.strptime(x,'%Y-%m-%d'))
 region['total_hosp'] = region['hosp'] + region['rad']
+region_fr = region[['jour','sexe']]
+region_fr = region_fr.drop_duplicates(subset = ['jour','sexe'])
+region_fr['dep'] = 'fr' 
+region_fr_hosp = pandas.DataFrame(region.groupby(by = ['jour','sexe']).hosp.sum())
+region_fr = region_fr.merge(region_fr_hosp, on = ['jour','sexe'],how = 'inner',suffixes = ('','_fr'))
+region_fr_rea = pandas.DataFrame(region.groupby(by = ['jour','sexe']).rea.sum())
+region_fr = region_fr.merge(region_fr_rea, on = ['jour','sexe'],how = 'inner',suffixes = ('','_fr'))
+region_fr_rad = pandas.DataFrame(region.groupby(by = ['jour','sexe']).rad.sum())
+region_fr = region_fr.merge(region_fr_rad, on = ['jour','sexe'],how = 'inner',suffixes = ('','_fr'))
+region_fr_dc = pandas.DataFrame(region.groupby(by = ['jour','sexe']).dc.sum())
+region_fr = region_fr.merge(region_fr_dc, on = ['jour','sexe'],how = 'inner',suffixes = ('','_fr'))
+region_fr_total_hosp = pandas.DataFrame(region.groupby(by = ['jour','sexe']).total_hosp.sum())
+region_fr = region_fr.merge(region_fr_total_hosp, on = ['jour','sexe'],how = 'inner',suffixes = ('','_fr'))
+region_fr = region_fr[region.columns]
+region = pandas.concat([region,region_fr],axis = 0)
 pct_col = ['rea','rad','dc']
 for p in pct_col:
     region['pct_' + p] = region[p] / region['total_hosp']

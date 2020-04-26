@@ -1,20 +1,8 @@
 import requests
 import pandas
 import numpy
+import datetime
 from sklearn import linear_model,neighbors,svm,preprocessing,tree,ensemble
-
-class download_file:
-    def __init__(self,url_csv,path_folder):
-        self.url_csv = url_csv
-        self.path_folder = path_folder
-
-    def download(self):
-        r = requests.get(self.url_csv)
-        filename = self.url_csv.split('/')
-        filename = filename[len(filename) - 1]
-        fichier = open(self.path_folder + filename,'wb')
-        fichier.write(r.content)
-        fichier.close()
 
 class analysis:
     def __init__(self,path_folder,url_csv,col_id,col_drop,nb_day):
@@ -23,16 +11,38 @@ class analysis:
         self.filename = url_csv.split('/')
         self.filename = self.filename[len(self.filename) - 1]
         self.col_id = col_id
-        self.mat = pandas.read_csv(self.path_folder + self.filename,sep = ',',engine = 'python')
-        self.mat['id'] = ''
-        for ci in self.col_id:
-            self.mat[ci] = self.mat[ci].apply(lambda x: str(x).lower().replace('nan',''))
-            sel = self.mat[ci] != ''
-            if sum(sel) > 0:
-                self.mat['id'][sel] += self.mat[ci][sel] + '_'
-        self.mat['id'] = self.mat['id'].apply(lambda x: x[0:(len(x) - 1)])
-        self.mat = self.mat.drop(col_drop, axis = 1)
+        self.mat = pandas.read_csv(self.path_folder + self.filename,sep = ';',engine = 'python')
+        self.mat = self.mat[['dep','sexe','jour','hosp','rea','rad','dc']]
         self.mat_hot_encoder = pandas.DataFrame()
+        self.mat_hosp = pandas.DataFrame()
+        self.mat_rea = pandas.DataFrame()
+        self.mat_rad = pandas.DataFrame()
+        self.mat_dc = pandas.DataFrame()
+
+    def in_1_line(self,x):
+        temp_hosp = pandas.DataFrame()
+        temp_hosp['dep'] = [x['dep'].iloc[0]]
+        temp_hosp['sexe'] = [x['sexe'].iloc[0]]
+        temp_rea = pandas.DataFrame()
+        temp_rea['dep'] = [x['dep'].iloc[0]]
+        temp_rea['sexe'] = [x['sexe'].iloc[0]]
+        temp_rad = pandas.DataFrame()
+        temp_rad['dep'] = [x['dep'].iloc[0]]
+        temp_rad['sexe'] = [x['sexe'].iloc[0]]
+        temp_dc = pandas.DataFrame()
+        temp_dc['dep'] = [x['dep'].iloc[0]]
+        temp_dc['sexe'] = [x['sexe'].iloc[0]]
+        for i in range(len(x)):
+            jour = x['jour'].iloc[i]
+            temp_hosp[jour] = x['hosp'].iloc[i]
+            temp_rea[jour] = x['rea'].iloc[i]
+            temp_rad[jour] = x['rad'].iloc[i]
+            temp_dc[jour] = x['dc'].iloc[i]
+        self.mat_hosp = self.mat_hosp.append(temp_hosp)
+        self.mat_rea = self.mat_rea.append(temp_rea)
+        self.mat_rad = self.mat_rad.append(temp_rad)
+        self.mat_dc = self.mat_dc.append(temp_dc)
+
 
     def hot_encoder(self):
         enc = preprocessing.OneHotEncoder()
@@ -41,28 +51,18 @@ class analysis:
         self.mat_hot_encoder.columns = self.mat['id'].unique()
 
     def diff_date(self):
-        self.hot_encoder()
-        n_mat = self.mat.drop('id',axis = 1)
-        n_mat = numpy.array(n_mat)
-        new_case = n_mat[:,1:n_mat.shape[1]] - n_mat[:,0:(n_mat.shape[1] - 1)]
-        new_case = numpy.append(n_mat[:,0:1],new_case,axis = 1)
-        analyze = new_case[:,0:self.nb_day]
-        analyze = numpy.append(analyze,numpy.array(self.mat_hot_encoder),axis = 1)
-        for i in range(self.nb_day + 1,new_case.shape[1]+1):
-            analyze_i = numpy.append(new_case[:,(i-self.nb_day):i],numpy.array(self.mat_hot_encoder),axis = 1)
-            # analyze_i = new_case[:,(i-self.nb_day):i]
-            analyze = numpy.append(analyze,analyze_i,axis = 0)
-        analyze = pandas.DataFrame(analyze)
-        colnames = []
-        k = 0
-        for i in range(len(analyze.columns)):
-            if i < self.nb_day:
-                colnames.append(i)
-            else:
-                colnames.append(self.mat_hot_encoder.columns[k])
-                k += 1
-        analyze.columns = colnames
-        analyze.to_csv('C:\\covid-fr\\datas\\legend.csv',index = False,sep = ';')
+        sex = self.mat['sexe'].unique()
+        dep = self.mat['dep'].unique()
+        for s in sex:
+            for d in dep:
+                if str(d) != 'nan':
+                    print(str(s) + ' - ' + str(d))
+                    sel = numpy.array(self.mat['sexe'] == s) * numpy.array(self.mat['dep'] == d)
+                    self.in_1_line(self.mat[sel])
+        self.mat_hosp.to_csv('C:\\covid-fr\\datas\\hosp.csv',index = False,sep = ';')
+        self.mat_rea.to_csv('C:\\covid-fr\\datas\\rea.csv',index = False,sep = ';')
+        self.mat_rad.to_csv('C:\\covid-fr\\datas\\rad.csv',index = False,sep = ';')
+        self.mat_dc.to_csv('C:\\covid-fr\\datas\\dc.csv',index = False,sep = ';')
 
 class prediction_covid:
     def __init__(self,cv,nb_day):
@@ -130,24 +130,19 @@ class prediction_covid:
         mat_coef['R2'] = R2
         mat_coef.to_csv('C:\\covid-fr\\datas\\coeff.csv',index = False,sep = ';')
 
-csv = ['https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv',
-        'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv',
-        'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv',
-        'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv']
 path_folder = 'C:\\covid-fr\\datas\\'
 col_id = [['Province/State','Country/Region']]
 col_drop = [['Province/State','Country/Region','Lat','Long']]
-
-for url_csv in csv:
-    df = download_file(url_csv,path_folder)
-    df.download()
+date = datetime.datetime.now()
+date = date.strftime('%d.%m.%Y')
+csv = ['region_covid_' + date + '.csv']
 
 an = analysis(path_folder,csv[0],col_id[0],col_drop[0],11)
 an.diff_date()
 
-pc = prediction_covid(10,10)
-pc.mesure()
-pc.analyze()
+# pc = prediction_covid(10,10)
+# pc.mesure()
+# pc.analyze()
 
-while True:
-    pass
+# while True:
+#     pass
