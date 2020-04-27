@@ -11,10 +11,14 @@
 	<body>
 		<br />
 		<div align = "center">
-			<div align = "center" class="btn-group" role="group" aria-label="Basic example">
+		<div align = "center" class="btn-group" role="group" aria-label="Basic example">
 				<a href = "coronavirus.php"> <input type="button" value="Evolution Covid" class="btn btn-secondary"/> </a>
 				<a href = "coronavirus_ratio.php"> <input type="button" value="Ratio Covid" class="btn btn-secondary"/> </a>
 				<a href = "resez_chez_vous.php"> <input type="button" value="Pr_Mutation Covid" class="btn btn-secondary"/> </a>
+			</div>
+			<div align = "center" class="btn-group" role="group" aria-label="Basic example">
+				<a href = "coronavirus_region.php"> <input type="button" value="Evolution par Region" class="btn btn-secondary"/> </a>
+				<a href = "pred_rea.php"> <input type="button" value="Pred Rea" class="btn btn-secondary"/> </a>
 			</div>
 		</div>
 		<br />

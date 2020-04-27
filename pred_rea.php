@@ -28,9 +28,9 @@
 	<body>
 		<div class = "corps">
             <div class = "Gauche_Doc">
-				<!-- <ul>
+				<ul>
 					<a href = "Index.php"> Acceuil </a> <br />
-				</ul> -->
+				</ul>
 			</div>
 			<div class = "Centre_Doc">
                 <?php

@@ -214,13 +214,13 @@ csv = ['region_covid_' + date + '.csv']
 an = analysis(path_folder,csv[0],col_id[0],col_drop[0],11)
 an.diff_date()
 
-pc = prediction_covid(10,10,'dc')
+pc = prediction_covid(100,10,'dc')
 pc.mesure()
-pc = prediction_covid(10,10,'rea')
+pc = prediction_covid(100,10,'rea')
 pc.mesure()
-pc = prediction_covid(10,10,'rad')
+pc = prediction_covid(100,10,'rad')
 pc.mesure()
-pc = prediction_covid(10,10,'hosp')
+pc = prediction_covid(100,10,'hosp')
 pc.mesure()
 
 pr = prod('hosp')
