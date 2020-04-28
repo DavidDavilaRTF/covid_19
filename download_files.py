@@ -42,6 +42,8 @@ for c in col_ratio:
     covid_pandas['ratio_' + c] = covid_pandas['ratio_' + c].apply(lambda x: int(float(x) * 10000)/10000)
 
 covid_pandas.to_csv('C:\\covid-fr\\datas\\' + 'covid_' + date + '.csv',sep = ';',index = False)
+covid_pandas.to_csv('C:\\Site_Web\\' + 'covid_' + date + '.csv',sep = ';',index = False)
 covid_pandas = pandas.DataFrame(numpy.array(covid_pandas['maille_nom'].unique()))
 covid_pandas.columns = ['state']
 covid_pandas.to_csv('C:\\covid-fr\\datas\\' + 'state_' + date + '.csv',sep = ';',index = False)
+covid_pandas.to_csv('C:\\Site_Web\\' + 'state_' + date + '.csv',sep = ';',index = False)

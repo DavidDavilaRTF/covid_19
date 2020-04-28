@@ -5,8 +5,8 @@ import datetime
 from sklearn import linear_model,neighbors,svm,preprocessing,tree,ensemble
 
 class analysis:
-    def __init__(self,path_folder,url_csv,col_id,col_drop,nb_day):
-        self.nb_day = nb_day
+    def __init__(self,path_folder,url_csv,col_id,col_drop,nb_day_analyze):
+        self.nb_day_analyze = nb_day_analyze
         self.path_folder = path_folder
         self.filename = url_csv.split('/')
         self.filename = self.filename[len(self.filename) - 1]
@@ -22,16 +22,12 @@ class analysis:
     def in_1_line(self,x):
         temp_hosp = pandas.DataFrame()
         temp_hosp['dep'] = [x['dep'].iloc[0]]
-        # temp_hosp['sexe'] = [x['sexe'].iloc[0]]
         temp_rea = pandas.DataFrame()
         temp_rea['dep'] = [x['dep'].iloc[0]]
-        # temp_rea['sexe'] = [x['sexe'].iloc[0]]
         temp_rad = pandas.DataFrame()
         temp_rad['dep'] = [x['dep'].iloc[0]]
-        # temp_rad['sexe'] = [x['sexe'].iloc[0]]
         temp_dc = pandas.DataFrame()
         temp_dc['dep'] = [x['dep'].iloc[0]]
-        # temp_dc['sexe'] = [x['sexe'].iloc[0]]
         for i in range(len(x)):
             jour = x['jour'].iloc[i]
             temp_hosp[jour] = [x['hosp'].iloc[i]]
@@ -43,14 +39,27 @@ class analysis:
         self.mat_rad = self.mat_rad.append(temp_rad)
         self.mat_dc = self.mat_dc.append(temp_dc)
 
-
     def hot_encoder(self):
         enc = preprocessing.OneHotEncoder()
         enc.fit(self.mat[['id']])
         self.mat_hot_encoder = pandas.DataFrame(numpy.array(enc.transform(self.mat[['id']]).toarray()))
         self.mat_hot_encoder.columns = self.mat['id'].unique()
 
-    def diff_date(self):
+    def to_analyze(self,mat,nb_day_pred):
+        analyze = numpy.array(mat)[:,0:self.nb_day_analyze]
+        target = numpy.array(mat)[:,(self.nb_day_analyze + nb_day_pred - 1)]
+        analyze = numpy.c_[analyze,target]
+        for i in range(1,mat.shape[1]):
+            try:
+                analyze_i = numpy.array(mat)[:,i:(self.nb_day_analyze + i)]
+                target_i = numpy.array(mat)[:,(self.nb_day_analyze + nb_day_pred - 1 + i)]
+                analyze_i = numpy.c_[analyze_i,target_i]
+                analyze = numpy.r_[analyze,analyze_i]
+            except:
+                pass
+        return analyze
+
+    def create_mat_prod(self):
         sex = [0]
         dep = self.mat['dep'].unique()
         for s in sex:
@@ -59,53 +68,42 @@ class analysis:
                     print(str(s) + ' - ' + str(d))
                     sel = numpy.array(self.mat['sexe'] == s) * numpy.array(self.mat['dep'] == d)
                     self.in_1_line(self.mat[sel])
+        
         self.mat_hosp.to_csv('C:\\covid-fr\\datas\\hosp_prod.csv',index = False,sep = ';')
         self.mat_rea.to_csv('C:\\covid-fr\\datas\\rea_prod.csv',index = False,sep = ';')
         self.mat_rad.to_csv('C:\\covid-fr\\datas\\rad_prod.csv',index = False,sep = ';')
         self.mat_dc.to_csv('C:\\covid-fr\\datas\\dc_prod.csv',index = False,sep = ';')
         
+    def create_mat_analyze(self,nb_day_pred):
+
+        self.mat_hosp = pandas.read_csv('C:\\covid-fr\\datas\\hosp_prod.csv',engine = 'python',sep = ';')
+        self.mat_rea = pandas.read_csv('C:\\covid-fr\\datas\\rea_prod.csv',engine = 'python',sep = ';')
+        self.mat_rad = pandas.read_csv('C:\\covid-fr\\datas\\rad_prod.csv',engine = 'python',sep = ';')
+        self.mat_dc = pandas.read_csv('C:\\covid-fr\\datas\\dc_prod.csv',engine = 'python',sep = ';')
+
         self.mat_hosp = self.mat_hosp.drop(['dep'],axis = 1)
         self.mat_rea = self.mat_rea.drop(['dep'],axis = 1)
         self.mat_rad = self.mat_rad.drop(['dep'],axis = 1)
         self.mat_dc = self.mat_dc.drop(['dep'],axis = 1)
 
-        n_hosp = numpy.array(self.mat_hosp)[:,0:self.nb_day]
-        for i in range(self.nb_day + 1,self.mat_hosp.shape[1]+1):
-            # analyze_i = numpy.append(new_case[:,(i-self.nb_day):i],numpy.array(self.mat_hot_encoder),axis = 1)
-            analyze_i = numpy.array(self.mat_hosp)[:,(i-self.nb_day):i]
-            n_hosp = numpy.append(n_hosp,analyze_i,axis = 0)
-
-        n_rea = numpy.array(self.mat_rea)[:,0:self.nb_day]
-        for i in range(self.nb_day + 1,self.mat_hosp.shape[1]+1):
-            # analyze_i = numpy.append(new_case[:,(i-self.nb_day):i],numpy.array(self.mat_hot_encoder),axis = 1)
-            analyze_i = numpy.array(self.mat_rea)[:,(i-self.nb_day):i]
-            n_rea = numpy.append(n_rea,analyze_i,axis = 0)
-
-        n_rad = numpy.array(self.mat_rad)[:,0:self.nb_day]
-        for i in range(self.nb_day + 1,self.mat_hosp.shape[1]+1):
-            # analyze_i = numpy.append(new_case[:,(i-self.nb_day):i],numpy.array(self.mat_hot_encoder),axis = 1)
-            analyze_i = numpy.array(self.mat_rad)[:,(i-self.nb_day):i]
-            n_rad = numpy.append(n_rad,analyze_i,axis = 0)
-
-        n_dc = numpy.array(self.mat_dc)[:,0:self.nb_day]
-        for i in range(self.nb_day + 1,self.mat_hosp.shape[1]+1):
-            # analyze_i = numpy.append(new_case[:,(i-self.nb_day):i],numpy.array(self.mat_hot_encoder),axis = 1)
-            analyze_i = numpy.array(self.mat_dc)[:,(i-self.nb_day):i]
-            n_dc = numpy.append(n_dc,analyze_i,axis = 0)
+        n_hosp = self.to_analyze(self.mat_hosp,nb_day_pred)
+        n_rea = self.to_analyze(self.mat_rea,nb_day_pred)
+        n_dc = self.to_analyze(self.mat_dc,nb_day_pred)
+        n_rad = self.to_analyze(self.mat_rad,nb_day_pred)
 
         self.mat_hosp = pandas.DataFrame(n_hosp)
         self.mat_rea = pandas.DataFrame(n_rea)
         self.mat_rad = pandas.DataFrame(n_rad)
         self.mat_dc = pandas.DataFrame(n_dc)
 
-        self.mat_hosp.to_csv('C:\\covid-fr\\datas\\hosp.csv',index = False,sep = ';')
-        self.mat_rea.to_csv('C:\\covid-fr\\datas\\rea.csv',index = False,sep = ';')
-        self.mat_rad.to_csv('C:\\covid-fr\\datas\\rad.csv',index = False,sep = ';')
-        self.mat_dc.to_csv('C:\\covid-fr\\datas\\dc.csv',index = False,sep = ';')
+        self.mat_hosp.to_csv('C:\\covid-fr\\datas\\hosp_' + str(k) + '.csv',index = False,sep = ';')
+        self.mat_rea.to_csv('C:\\covid-fr\\datas\\rea_' + str(k) + '.csv',index = False,sep = ';')
+        self.mat_rad.to_csv('C:\\covid-fr\\datas\\rad_' + str(k) + '.csv',index = False,sep = ';')
+        self.mat_dc.to_csv('C:\\covid-fr\\datas\\dc_' + str(k) + '.csv',index = False,sep = ';')
 
 class prediction_covid:
-    def __init__(self,cv,nb_day,file):
-        self.covid = pandas.read_csv('C:\\covid-fr\\datas\\' + file + '.csv',sep = ';',engine = 'python')
+    def __init__(self,cv,nb_day,nb_day_analyze,file):
+        self.covid = pandas.read_csv('C:\\covid-fr\\datas\\' + file + '_' + str(nb_day_analyze) + '.csv',sep = ';',engine = 'python')
         self.covid_train = pandas.DataFrame()
         self.covid_test = pandas.DataFrame()
         self.mes = pandas.DataFrame()
@@ -117,6 +115,7 @@ class prediction_covid:
         self.cv = cv
         self.nb_day = nb_day
         self.file = file
+        self.nb_day_analyze = nb_day_analyze
 
     def create_train_test(self):
         sel_train = numpy.random.choice(range(len(self.covid)),size = int(0.9 * len(self.covid)),replace = False)
@@ -158,7 +157,7 @@ class prediction_covid:
             print(i)
             print(self.mes)
 
-        self.mes.to_csv('C:\\covid-fr\\datas\\' + self.file + '_mes.csv',sep = ';',index = False)
+        self.mes.to_csv('C:\\covid-fr\\datas\\' + self.file + '_' + str(self.nb_day_analyze) + '_mes.csv',sep = ';',index = False)
 
     def analyze(self):
         y = self.covid[[str(self.nb_day)]]
@@ -175,8 +174,8 @@ class prediction_covid:
         mat_coef.to_csv('C:\\covid-fr\\datas\\coeff.csv',index = False,sep = ';')
 
 class prod:
-    def __init__(self,file_name):
-        opt_file = pandas.read_csv('C:\\covid-fr\\datas\\' + file_name + '_mes.csv',sep = ';',engine = 'python')
+    def __init__(self,file_name,nb_day_pred):
+        opt_file = pandas.read_csv('C:\\covid-fr\\datas\\' + file_name + '_' + str(nb_day_pred) + '_mes.csv',sep = ';',engine = 'python')
         self.opt = 1
         minima = opt_file['lm_1'].iloc[0]
         for i in range(2,len(opt_file.columns)):
@@ -190,6 +189,7 @@ class prod:
         self.prod_file = self.prod_file[colu]
         self.train = pandas.read_csv('C:\\covid-fr\\datas\\' + file_name + '.csv',sep = ';',engine = 'python')
         self.file_name = file_name
+        self.nb_day_pred = nb_day_pred
 
     def prod_pred(self):
         y_train = self.train[[str(len(self.train.columns) - 1)]]
@@ -201,36 +201,61 @@ class prod:
         model = linear_model.LinearRegression()
         model.fit(x_train,y_train)
         pred = model.predict(self.prod_file)[:,0]
-        self.dep['pred'] = pred
-        self.dep.to_csv('C:\\covid-fr\\datas\\' + self.file_name + '_pred.csv',index = False,sep = ';')
-        
+        date = datetime.datetime.now() + datetime.timedelta(days=self.nb_day_pred)
+        date = date.strftime('%d.%m.%Y')
+        self.dep[self.file_name + '_' + date] = pred
+        self.dep.to_csv('C:\\covid-fr\\datas\\' + self.file_name + '_' + str(self.nb_day_pred) + '_pred.csv',index = False,sep = ';')
+
+class merge_pred:
+    def __init__(self,filename,nb_day_pred):
+        self.nb_day_pred = nb_day_pred
+        self.filename = filename
+        self.pred = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_pred.csv',engine = 'python',sep = ';')
+
+    def merge_file(self):
+        for i in range(2,self.nb_day_pred + 1):
+            temp = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_' + str(i) + '_pred.csv',engine = 'python',sep = ';')
+            self.pred = self.pred.merge(temp,on = ['dep'],how = 'inner')
+        self.pred.to_csv('C:\\covid-fr\\datas\\' + self.filename + '_pred.csv',index = False,sep = ';')
+
 path_folder = 'C:\\covid-fr\\datas\\'
 col_id = [['Province/State','Country/Region']]
 col_drop = [['Province/State','Country/Region','Lat','Long']]
 date = datetime.datetime.now()
 date = date.strftime('%d.%m.%Y')
 csv = ['region_covid_' + date + '.csv']
+nb_day_pred = 2
 
-an = analysis(path_folder,csv[0],col_id[0],col_drop[0],11)
-an.diff_date()
+an = analysis(path_folder,csv[0],col_id[0],col_drop[0],10)
+an.create_mat_prod()
+for k in range(1,nb_day_pred):
+    an.create_mat_analyze(k)
 
-pc = prediction_covid(100,10,'dc')
-pc.mesure()
-pc = prediction_covid(100,10,'rea')
-pc.mesure()
-pc = prediction_covid(100,10,'rad')
-pc.mesure()
-pc = prediction_covid(100,10,'hosp')
-pc.mesure()
+cv = 100
+for k in range(1,nb_day_pred):
+    pc = prediction_covid(cv,10,k,'dc')
+    pc.mesure()
+    pc = prediction_covid(cv,10,k,'rea')
+    pc.mesure()
+    pc = prediction_covid(cv,10,k,'rad')
+    pc.mesure()
+    pc = prediction_covid(cv,10,k,'hosp')
+    pc.mesure()
 
-pr = prod('hosp')
-pr.prod_pred()
-pr = prod('dc')
-pr.prod_pred()
-pr = prod('rea')
-pr.prod_pred()
-pr = prod('rad')
-pr.prod_pred()
+    pr = prod('hosp',k)
+    pr.prod_pred()
+    pr = prod('dc',k)
+    pr.prod_pred()
+    pr = prod('rea',k)
+    pr.prod_pred()
+    pr = prod('rad',k)
+    pr.prod_pred()
 
-# while True:
-#     pass
+mp = merge_pred('hosp',nb_day_pred - 1)
+mp.merge_file()
+mp = merge_pred('dc',nb_day_pred - 1)
+mp.merge_file()
+mp = merge_pred('rea',nb_day_pred - 1)
+mp.merge_file()
+mp = merge_pred('rad',nb_day_pred - 1)
+mp.merge_file()
