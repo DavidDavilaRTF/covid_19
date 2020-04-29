@@ -135,8 +135,14 @@ class prediction_covid:
 
             for i in range(self.nb_day):
                 model = linear_model.LinearRegression()
-                model.fit(x_train[x_train.columns[(self.nb_day - i - 1):self.nb_day]],y_train)
-                pred = model.predict(x_test[x_test.columns[(self.nb_day - i - 1):self.nb_day]])[:,0]
+                x_an_train = numpy.array(x_train[x_train.columns[(self.nb_day - i - 1):self.nb_day]])
+                x_an_test = numpy.array(x_test[x_test.columns[(self.nb_day - i - 1):self.nb_day]])
+                # x_an_train = numpy.c_[x_an_train,x_an_train * x_an_train]
+                # x_an_test = numpy.c_[x_an_test,x_an_test * x_an_test]
+                x_an_train = pandas.DataFrame(x_an_train)
+                x_an_test = pandas.DataFrame(x_an_test)
+                model.fit(x_an_train,y_train)
+                pred = model.predict(x_an_test)[:,0]
                 self.mes['lm_' + str(i + 1)].iloc[0] += numpy.mean(numpy.power(y_test - pred,2.0)) / self.cv
 
             # model = tree.DecisionTreeClassifier()
@@ -224,7 +230,7 @@ col_drop = [['Province/State','Country/Region','Lat','Long']]
 date = datetime.datetime.now()
 date = date.strftime('%d.%m.%Y')
 csv = ['region_covid_' + date + '.csv']
-nb_day_pred = 2
+nb_day_pred = 3
 
 an = analysis(path_folder,csv[0],col_id[0],col_drop[0],10)
 an.create_mat_prod()
