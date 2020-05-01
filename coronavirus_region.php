@@ -74,7 +74,7 @@
                                 <input type="submit" value="Valider" />
                                 </div>';
                         $date = date("d.m.Y");
-						$path = 'region_covid_' . $date . '.csv';
+						$path = 'region_covid.csv';
 						$fichier = fopen($path,'r+');
 						$line = fgets($fichier);
                         echo '<table class="table table-dark">';
