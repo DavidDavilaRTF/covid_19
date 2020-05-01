@@ -133,12 +133,34 @@ class prediction_covid:
             x_test = self.covid_test.drop([str(self.nb_day)],axis = 1)
             y_test = numpy.array(y_test)[:,0]
 
-            for i in range(self.nb_day):
+            for i in range(1,self.nb_day):
                 model = linear_model.LinearRegression()
                 x_an_train = numpy.array(x_train[x_train.columns[(self.nb_day - i - 1):self.nb_day]])
                 x_an_test = numpy.array(x_test[x_test.columns[(self.nb_day - i - 1):self.nb_day]])
-                # x_an_train = numpy.c_[x_an_train,x_an_train * x_an_train]
-                # x_an_test = numpy.c_[x_an_test,x_an_test * x_an_test]
+
+                x_an_train = numpy.c_[x_an_train,numpy.c_[x_an_train[:,1:(i+1)]] / numpy.c_[x_an_train[:,0:i]]]
+                x_an_test = numpy.c_[x_an_test,numpy.c_[x_an_test[:,1:(i+1)]] / numpy.c_[x_an_test[:,0:i]]]
+                
+                sel = x_an_train.astype(str) == 'inf'
+                x_an_train[sel] = 0
+                sel = sel.astype(int)
+                x_an_train = numpy.c_[x_an_train,sel]
+
+                sel = x_an_train.astype(str) == 'nan'
+                x_an_train[sel] = 0
+                sel = sel.astype(int)
+                x_an_train = numpy.c_[x_an_train,sel]
+
+                sel = x_an_test.astype(str) == 'inf'
+                x_an_test[sel] = 0
+                sel = sel.astype(int)
+                x_an_test = numpy.c_[x_an_test,sel]
+
+                sel = x_an_test.astype(str) == 'nan'
+                x_an_test[sel] = 0
+                sel = sel.astype(int)
+                x_an_test = numpy.c_[x_an_test,sel]
+
                 x_an_train = pandas.DataFrame(x_an_train)
                 x_an_test = pandas.DataFrame(x_an_test)
                 model.fit(x_an_train,y_train)
@@ -230,7 +252,7 @@ col_drop = [['Province/State','Country/Region','Lat','Long']]
 date = datetime.datetime.now()
 date = date.strftime('%d.%m.%Y')
 csv = ['region_covid_' + date + '.csv']
-nb_day_pred = 3
+nb_day_pred = 2
 
 an = analysis(path_folder,csv[0],col_id[0],col_drop[0],10)
 an.create_mat_prod()
