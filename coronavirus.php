@@ -18,7 +18,7 @@
 				<form action="coronavirus.php" method="post">
                     <?php
                         $date = date("d.m.Y");
-                        $path = 'state_' . $date . '.csv';
+                        $path = 'state.csv';
                         $fichier = fopen($path,'r+');
                         $line = fgets($fichier);
                         $nb_line = 0;
@@ -51,7 +51,7 @@
                                 <input type="submit" value="Valider" />
                                 </div>';
                         $date = date("d.m.Y");
-						$path = 'covid_' . $date . '.csv';
+						$path = 'covid.csv';
 						$fichier = fopen($path,'r+');
 						$line = fgets($fichier);
                         echo '<table class="table table-dark">';
