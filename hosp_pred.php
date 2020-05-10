@@ -34,7 +34,7 @@
 			</div>
 			<div class = "Centre_Doc">
                 <?php
-                    $path = 'hosp_pred.csv';
+                    $path = 'hosp_pred_extrapolation.csv';
                     $fichier = fopen($path,'r+');
                     $line = fgets($fichier);
                     echo '<table class="table table-dark">';

@@ -50,12 +50,16 @@ class analysis:
         n = mat.shape[1] - 1
         analyze = numpy.array(mat)[:,(n - nb_day_pred - self.nb_day_analyze + 1):(n - nb_day_pred + 1)]
         target = numpy.array(mat)[:,n]
+        target_1 = numpy.array(mat)[:,(n - nb_day_pred + 1)]
         analyze = numpy.c_[analyze,target]
+        analyze = numpy.c_[analyze,target_1]
         for i in range(1,mat.shape[1]):
             if n - nb_day_pred - self.nb_day_analyze + 1 - i >= 0:
                 analyze_i = numpy.array(mat)[:,(n - nb_day_pred - self.nb_day_analyze + 1 - i):(n - nb_day_pred - i + 1)]
                 target_i = numpy.array(mat)[:,(n - i)]
+                target_i1 = numpy.array(mat)[:,(n - nb_day_pred - i + 1)]
                 analyze_i = numpy.c_[analyze_i,target_i]
+                analyze_i = numpy.c_[analyze_i,target_i1]
                 analyze = numpy.r_[analyze,analyze_i]
         return analyze
 
@@ -69,6 +73,18 @@ class analysis:
                     sel = numpy.array(self.mat['sexe'] == s) * numpy.array(self.mat['dep'] == d)
                     self.in_1_line(self.mat[sel])
         
+        col_dc = self.mat_dc.columns
+        np_dc = numpy.array(self.mat_dc)
+        dep = np_dc[:,0]
+        np_dc = numpy.delete(np_dc,0,1)
+        for i in range(1,np_dc.shape[1]):
+            sel_err = np_dc[:,i] < np_dc[:,(i-1)]
+            if sum(sel_err) > 0:
+                np_dc[sel_err,i] = np_dc[sel_err,(i-1)]
+        np_dc = numpy.c_[dep,np_dc]
+        self.mat_dc = pandas.DataFrame(np_dc)
+        self.mat_dc.columns = col_dc
+
         self.mat_hosp.to_csv('C:\\covid-fr\\datas\\hosp_prod.csv',index = False,sep = ';')
         self.mat_rea.to_csv('C:\\covid-fr\\datas\\rea_prod.csv',index = False,sep = ';')
         self.mat_rad.to_csv('C:\\covid-fr\\datas\\rad_prod.csv',index = False,sep = ';')
@@ -85,7 +101,7 @@ class analysis:
         self.mat_rea = self.mat_rea.drop(['dep'],axis = 1)
         self.mat_rad = self.mat_rad.drop(['dep'],axis = 1)
         self.mat_dc = self.mat_dc.drop(['dep'],axis = 1)
-
+       
         n_hosp = self.to_analyze(self.mat_hosp,nb_day_pred)
         n_rea = self.to_analyze(self.mat_rea,nb_day_pred)
         n_dc = self.to_analyze(self.mat_dc,nb_day_pred)
@@ -104,7 +120,6 @@ class analysis:
 class prediction_covid:
     def __init__(self,cv,nb_day,nb_day_analyze,filename):
         self.covid = pandas.read_csv('C:\\covid-fr\\datas\\' + filename + '_' + str(nb_day_analyze) + '.csv',sep = ';',engine = 'python')
-        self.covid_extrapolation = pandas.read_csv('C:\\covid-fr\\datas\\' + filename + '_' + str(1) + '.csv',sep = ';',engine = 'python')
         self.covid_train = pandas.DataFrame()
         self.covid_test = pandas.DataFrame()
         self.mes = pandas.DataFrame()
@@ -149,9 +164,10 @@ class prediction_covid:
             for i in range(self.nb_day):
 
                 y_train = self.covid_train[[str(self.nb_day)]]
+                y_train_extrapolation = self.covid_train[[str(self.nb_day + 1)]]
                 y_test = self.covid_test[[str(self.nb_day)]]
-                x_train = self.covid_train.drop([str(self.nb_day)],axis = 1)
-                x_test = self.covid_test.drop([str(self.nb_day)],axis = 1)
+                x_train = self.covid_train.drop([str(self.nb_day),str(self.nb_day + 1)],axis = 1)
+                x_test = self.covid_test.drop([str(self.nb_day),str(self.nb_day + 1)],axis = 1)
                 y_test = numpy.array(y_test)[:,0]
                 m = len(x_train.columns)
 
@@ -166,28 +182,7 @@ class prediction_covid:
                 self.mes['lm_' + str(i + 1)].iloc[0] += numpy.mean(numpy.power(y_test - pred,2.0)) / self.cv
                 self.mes['lm_' + str(i + 1)].iloc[1] += numpy.mean(abs(y_test - pred)) / self.cv
 
-        self.mes.to_csv('C:\\covid-fr\\datas\\' + self.file + '_' + str(self.nb_day_analyze) + '_mes.csv',sep = ';',index = False)
-
-    def mesure_extrapolation(self):
-        for cvi in range(self.cv):
-            self.create_train_test()
-
-            for i in range(self.nb_day):
-
-                y_train = self.covid_extrapolation[[str(self.nb_day)]]
-                y_test = self.covid_test[[str(self.nb_day)]]
-                x_train = self.covid_extrapolation.drop([str(self.nb_day)],axis = 1)
-                x_test = self.covid_test.drop([str(self.nb_day)],axis = 1)
-                y_test = numpy.array(y_test)[:,0]
-                m = len(x_train.columns)
-
-                model = linear_model.LinearRegression()
-                x_an_train = numpy.array(x_train[x_train.columns[(m - i - 1):m]])
-                x_an_test = numpy.array(x_test[x_test.columns[(m - i - 1):m]])
-                x_an_train = self.trans(x_an_train)
-                x_an_test = self.trans(x_an_test)
-
-                model.fit(x_an_train,y_train)
+                model.fit(x_an_train,y_train_extrapolation)
 
                 for predi in range(self.nb_day_analyze):
                     pred = model.predict(x_an_test)[:,0]
@@ -201,6 +196,7 @@ class prediction_covid:
                 self.mes_extrapolation['lm_' + str(i + 1)].iloc[0] += numpy.mean(numpy.power(y_test - pred,2.0)) / self.cv
                 self.mes_extrapolation['lm_' + str(i + 1)].iloc[1] += numpy.mean(abs(y_test - pred)) / self.cv
 
+        self.mes.to_csv('C:\\covid-fr\\datas\\' + self.file + '_' + str(self.nb_day_analyze) + '_mes.csv',sep = ';',index = False)
         self.mes_extrapolation.to_csv('C:\\covid-fr\\datas\\' + self.file + '_' + str(self.nb_day_analyze) + '_mes_extrapolation.csv',sep = ';',index = False)
 
     def analyze(self):
@@ -232,7 +228,7 @@ class prod:
             pass
 
         # opt_file = pandas.read_csv('C:\\covid-fr\\datas\\' + filename + '_' + str(nb_day_pred) + '_mes_extrapolation.csv',sep = ';',engine = 'python')
-        self.opt_extrapolation = 5
+        self.opt_extrapolation = 10
         # minima = opt_file['lm_1'].iloc[0]
         # for i in range(2,len(opt_file.columns)):
         #     if minima >  opt_file['lm_' + str(i)].iloc[0]:
@@ -261,8 +257,8 @@ class prod:
 
     def prod_pred(self):
 
-        y_train = self.train[[str(len(self.train.columns) - 1)]]
-        x_train = self.train.drop([str(len(self.train.columns) - 1)],axis = 1)
+        y_train = self.train[[str(len(self.train.columns) - 2)]]
+        x_train = self.train.drop([str(len(self.train.columns) - 2),str(len(self.train.columns) - 1)],axis = 1)
         colu = x_train.columns
         colu = colu[(len(colu) - self.opt):len(colu)]
         x_train = numpy.array(x_train[colu])
@@ -283,7 +279,7 @@ class prod:
     def prod_pred_extrapolation(self):
 
         y_train = self.train_extrapolation[[str(len(self.train_extrapolation.columns) - 1)]]
-        x_train = self.train_extrapolation.drop([str(len(self.train_extrapolation.columns) - 1)],axis = 1)
+        x_train = self.train_extrapolation.drop([str(len(self.train.columns) - 2),str(len(self.train.columns) - 1)],axis = 1)
         colu = x_train.columns
         colu = colu[(len(colu) - self.opt_extrapolation):len(colu)]
         x_train = numpy.array(x_train[colu])
@@ -313,16 +309,14 @@ class merge_covid:
     def __init__(self,filename,nb_day_pred):
         self.nb_day_pred = nb_day_pred
         self.filename = filename
-        self.pred = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_pred.csv',engine = 'python',sep = ';')
-        self.pred_extrapolation = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_pred_extrapolation.csv',engine = 'python',sep = ';')
-        self.pred_mes_extrapolation = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_mes_extrapolation.csv',engine = 'python',sep = ';')
-        self.pred_mes = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_mes.csv',engine = 'python',sep = ';')
-        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_pred.csv')
-        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_pred_extrapolation.csv')
-        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_mes_extrapolation.csv')
-        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_mes.csv')
+        self.pred = pandas.DataFrame()
+        self.pred_extrapolation = pandas.DataFrame()
+        self.pred_mes_extrapolation = pandas.DataFrame()
+        self.pred_mes = pandas.DataFrame()
 
     def merge_file(self):
+        self.pred = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_pred.csv',engine = 'python',sep = ';')
+        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_pred.csv')
         for i in range(2,self.nb_day_pred + 1):
             temp = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_' + str(i) + '_pred.csv',engine = 'python',sep = ';')
             self.pred = self.pred.merge(temp,on = ['dep'],how = 'inner')
@@ -330,6 +324,8 @@ class merge_covid:
         self.pred.to_csv('C:\\covid-fr\\datas\\' + self.filename + '_pred.csv',index = False,sep = ';')
 
     def merge_file_mes(self):
+        self.pred_mes = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_mes.csv',engine = 'python',sep = ';')
+        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_mes.csv')
         for i in range(2,self.nb_day_pred + 1):
             temp = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_' + str(i) + '_mes.csv',engine = 'python',sep = ';')
             self.pred_mes = self.pred_mes.append(temp)
@@ -337,6 +333,8 @@ class merge_covid:
         self.pred_mes.to_csv('C:\\covid-fr\\datas\\' + self.filename + '_mes.csv',index = False,sep = ';')
 
     def merge_file_extrapolation(self):
+        self.pred_extrapolation = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_pred_extrapolation.csv',engine = 'python',sep = ';')
+        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_pred_extrapolation.csv')
         for i in range(2,self.nb_day_pred + 1):
             temp = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_' + str(i) + '_pred_extrapolation.csv',engine = 'python',sep = ';')
             self.pred_extrapolation = self.pred_extrapolation.merge(temp,on = ['dep'],how = 'inner')
@@ -344,6 +342,8 @@ class merge_covid:
         self.pred_extrapolation.to_csv('C:\\covid-fr\\datas\\' + self.filename + '_pred_extrapolation.csv',index = False,sep = ';')
 
     def merge_file_mes_extrapolation(self):
+        self.pred_mes_extrapolation = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_1_mes_extrapolation.csv',engine = 'python',sep = ';')
+        os.remove('C:\\covid-fr\\datas\\' + self.filename + '_1_mes_extrapolation.csv')
         for i in range(2,self.nb_day_pred + 1):
             temp = pandas.read_csv('C:\\covid-fr\\datas\\' + self.filename + '_' + str(i) + '_mes_extrapolation.csv',engine = 'python',sep = ';')
             self.pred_mes_extrapolation = self.pred_mes_extrapolation.append(temp)
@@ -356,7 +356,7 @@ col_drop = [['Province/State','Country/Region','Lat','Long']]
 date = datetime.datetime.now()
 date = date.strftime('%d.%m.%Y')
 csv = ['region_covid_' + date + '.csv']
-nb_day_pred = 10 + 1
+nb_day_pred = 6 + 1
 cv = 100
 filename = ['rea','hosp','dc','rad']
 
@@ -369,7 +369,6 @@ for k in range(1,nb_day_pred):
     for f in filename:
         pc = prediction_covid(cv,10,k,f)
         pc.mesure_prediction()
-        pc.mesure_extrapolation()
 
 for k in range(1,nb_day_pred):
     for f in filename:
