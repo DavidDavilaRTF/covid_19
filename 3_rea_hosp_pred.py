@@ -219,7 +219,7 @@ class prod:
             opt_file = pandas.read_csv('C:\\covid-fr\\datas\\' + filename + '_' + str(nb_day_pred) + '_mes.csv',sep = ';',engine = 'python')
             self.opt = 1
             minima = opt_file['lm_1'].iloc[0]
-            for i in range(2,len(opt_file.columns)):
+            for i in range(2,len(opt_file.columns) + 1):
                 if minima >  opt_file['lm_' + str(i)].iloc[0]:
                     self.opt = i
                     minima = opt_file['lm_' + str(i)].iloc[0]
@@ -227,13 +227,13 @@ class prod:
         except:
             pass
 
-        # opt_file = pandas.read_csv('C:\\covid-fr\\datas\\' + filename + '_' + str(nb_day_pred) + '_mes_extrapolation.csv',sep = ';',engine = 'python')
-        self.opt_extrapolation = 10
-        # minima = opt_file['lm_1'].iloc[0]
-        # for i in range(2,len(opt_file.columns)):
-        #     if minima >  opt_file['lm_' + str(i)].iloc[0]:
-        #         self.opt_extrapolation = i
-        #         minima = opt_file['lm_' + str(i)].iloc[0]
+        opt_file = pandas.read_csv('C:\\covid-fr\\datas\\' + filename + '_' + str(nb_day_pred) + '_mes_extrapolation.csv',sep = ';',engine = 'python')
+        self.opt_extrapolation = 2
+        minima = opt_file['lm_1'].iloc[0]
+        for i in range(2,len(opt_file.columns) + 1):
+            if minima >  opt_file['lm_' + str(i)].iloc[0]:
+                self.opt_extrapolation = i
+                minima = opt_file['lm_' + str(i)].iloc[0]
         
         self.prod_file = pandas.read_csv('C:\\covid-fr\\datas\\' + filename + '_prod.csv',sep = ';',engine = 'python')
         self.dep = self.prod_file[['dep']]
@@ -279,7 +279,7 @@ class prod:
     def prod_pred_extrapolation(self):
 
         y_train = self.train_extrapolation[[str(len(self.train_extrapolation.columns) - 1)]]
-        x_train = self.train_extrapolation.drop([str(len(self.train.columns) - 2),str(len(self.train.columns) - 1)],axis = 1)
+        x_train = self.train_extrapolation.drop([str(len(self.train_extrapolation.columns) - 2),str(len(self.train_extrapolation.columns) - 1)],axis = 1)
         colu = x_train.columns
         colu = colu[(len(colu) - self.opt_extrapolation):len(colu)]
         x_train = numpy.array(x_train[colu])
@@ -356,8 +356,8 @@ col_drop = [['Province/State','Country/Region','Lat','Long']]
 date = datetime.datetime.now()
 date = date.strftime('%d.%m.%Y')
 csv = ['region_covid_' + date + '.csv']
-nb_day_pred = 6 + 1
-cv = 100
+nb_day_pred = 10 + 1
+cv = 1
 filename = ['rea','hosp','dc','rad']
 
 an = analysis(path_folder,csv[0],col_id[0],col_drop[0],10)
